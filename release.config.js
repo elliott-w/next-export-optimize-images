@@ -65,6 +65,13 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
+        // Pre-flight auth check — runs in the verifyConditions phase, which
+        // is BEFORE any commit/tag is created. If the token is invalid or
+        // the .npmrc auth substitution is wrong (e.g. NODE_AUTH_TOKEN
+        // unset), this fails fast and the whole release aborts without
+        // touching origin. Without this, a publish failure leaves an orphan
+        // release commit + tag on main that has to be manually cleaned up.
+        verifyConditionsCmd: 'npm whoami --registry=https://registry.npmjs.org/',
         // package.json has the new version at this point. publish.js will
         // rename → npm publish (scoped) → revert. Revert restores the
         // unscoped name + bumped version so the git plugin commits the
