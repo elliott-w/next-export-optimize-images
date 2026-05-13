@@ -36,7 +36,7 @@
     "format": "biome format --write ./",
     "check:write": "biome check --write ./",
     "lint-staged": "lint-staged",
-    "prepare": "husky",
+    "prepare": "husky && npm run build",
     "pretest": "npm run build && npm-run-all --sequential pretest:**",
     "pretest:e2e": "cd __tests__/e2e && rimraf {.next,out} && next build && node cli.js",
     "pretest:e2e-build": "cd __tests__/e2e-build && rimraf .next && next build && node cli.js",

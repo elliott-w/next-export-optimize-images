@@ -27,9 +27,19 @@ This makes it possible to build a high performance website with this solution, w
 
 ## Installation
 
+Install directly from this GitHub fork:
+
 ```bash
-npm install next-export-optimize-images
+# latest main
+npm install github:elliott-w/next-export-optimize-images
+
+# pinned to a specific commit (recommended)
+npm install github:elliott-w/next-export-optimize-images#<commit-sha>
 ```
+
+In `package.json` the dependency entry stays as `next-export-optimize-images`, so all imports (`next-export-optimize-images/image`, `/picture`, `/remote-image`, etc.) work unchanged.
+
+The `prepare` script builds `dist/` on install, so no extra setup is needed in the consuming app.
 
 ## Document Site
 
