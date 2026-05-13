@@ -1,10 +1,10 @@
 import type { ImageConfigComplete } from 'next/dist/shared/lib/image-config'
-import type { ImageProps } from 'next/image'
+import type { ImageProps } from 'next/dist/shared/lib/image-external'
 import React, { forwardRef } from 'react'
 import type { Manifest } from '../../cli'
 import buildOutputInfo from '../../utils/buildOutputInfo'
 import getConfig from '../../utils/getConfig'
-import Image from './image'
+import TurboImage from './turbo-image'
 
 const REMOTE_URL_RE = /^(https?:)?\/\//i
 
@@ -12,10 +12,10 @@ const config = getConfig()
 
 const RemoteImage = forwardRef<HTMLImageElement, ImageProps>(({ src, ...props }, forwardedRef) => {
   if (
-    typeof window === 'undefined' &&
-    process.env.NODE_ENV === 'production' &&
     typeof src === 'string' &&
-    REMOTE_URL_RE.test(src)
+    REMOTE_URL_RE.test(src) &&
+    process.env.NODE_ENV === 'production' &&
+    typeof window === 'undefined'
   ) {
     // Lazy-require so the browser bundle never tries to resolve node:* deps.
     // The bundler treats the surrounding branch as dead code for the browser target.
@@ -66,9 +66,9 @@ const RemoteImage = forwardRef<HTMLImageElement, ImageProps>(({ src, ...props },
     }
   }
 
-  return <Image {...props} src={src} ref={forwardedRef} />
+  return <TurboImage {...props} src={src} ref={forwardedRef} />
 })
 RemoteImage.displayName = 'RemoteImage'
 
-export * from 'next/image'
+export * from 'next/dist/shared/lib/image-external'
 export default RemoteImage
