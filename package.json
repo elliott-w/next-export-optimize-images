@@ -42,6 +42,8 @@
     "pretest:e2e-build": "cd __tests__/e2e-build && rimraf .next && next build && node cli.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "pretest:alias-e2e": "npm run build && node __tests__/e2e-alias/scripts/build-all.js",
+    "test:alias-e2e": "jest --config jest.alias.config.js",
     "semantic-release": "SKIP_BY_SEMANTIC_RELEASE=true semantic-release",
     "typecheck": "tsc --noEmit"
   },
