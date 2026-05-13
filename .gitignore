@@ -35,3 +35,6 @@ yarn-error.log*
 # custom
 .eslintcache
 tsconfig.*tsbuildinfo
+
+# publish-rename snapshot (left behind if a publish is interrupted before revert)
+.publish-rename-snapshot.json

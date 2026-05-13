@@ -2,27 +2,41 @@ name: Release
 
 on:
   push:
-    branches: [release, beta]
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run build
       - name: Release
         env:
+          # setup-node@v4 wrote .npmrc using ${NODE_AUTH_TOKEN} as the auth
+          # placeholder, so this is the name npm actually expands at publish
+          # time. Keep NPM_TOKEN too — semantic-release's npm plugin reads it
+          # directly for verifyConditions.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_AUTHOR_NAME: 'dc7290'
-          GIT_AUTHOR_EMAIL: 'dhkh.cba0927@gmail.com'
-          GIT_COMMITTER_NAME: 'dc7290'
-          GIT_COMMITTER_EMAIL: 'dhkh.cba0927@gmail.com'
-        run: npm run semantic-release
+          GIT_AUTHOR_NAME: 'elliott-w'
+          GIT_AUTHOR_EMAIL: '30144036+elliott-w@users.noreply.github.com'
+          GIT_COMMITTER_NAME: 'elliott-w'
+          GIT_COMMITTER_EMAIL: '30144036+elliott-w@users.noreply.github.com'
+        run: npm run publish:fork

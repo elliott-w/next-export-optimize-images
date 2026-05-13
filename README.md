@@ -27,7 +27,27 @@ This makes it possible to build a high performance website with this solution, w
 
 ## Installation
 
-Install directly from this GitHub fork:
+This fork ships through two channels. Pick whichever fits your workflow — they're functionally identical, the only difference is the import specifier.
+
+### Option 1: npm (scoped package)
+
+Published to npm as `@elliott-w/next-export-optimize-images`:
+
+```bash
+npm install @elliott-w/next-export-optimize-images
+```
+
+Imports use the scoped name:
+
+```ts
+import withExportImages from '@elliott-w/next-export-optimize-images'
+import Image from '@elliott-w/next-export-optimize-images/image'
+import RemoteImage from '@elliott-w/next-export-optimize-images/remote-image'
+```
+
+### Option 2: Direct from GitHub
+
+Useful for pinning to a specific commit, or running off `main` without waiting for a release:
 
 ```bash
 # latest main
@@ -37,7 +57,13 @@ npm install github:elliott-w/next-export-optimize-images
 npm install github:elliott-w/next-export-optimize-images#<commit-sha>
 ```
 
-In `package.json` the dependency entry stays as `next-export-optimize-images`, so all imports (`next-export-optimize-images/image`, `/picture`, `/remote-image`, etc.) work unchanged.
+With this method the dependency name stays as the unscoped `next-export-optimize-images`, so imports use the unscoped name:
+
+```ts
+import withExportImages from 'next-export-optimize-images'
+import Image from 'next-export-optimize-images/image'
+import RemoteImage from 'next-export-optimize-images/remote-image'
+```
 
 The `prepare` script builds `dist/` on install, so no extra setup is needed in the consuming app.
 

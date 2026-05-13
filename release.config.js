@@ -1,43 +1,27 @@
 /**
- * A configuration file for semantic-release
+ * semantic-release config for the fork (@elliott-w/next-export-optimize-images).
  *
- * @see {@link https://semantic-release.gitbook.io/semantic-release/} for about semantic-release.
- * @see {@link https://semantic-release.gitbook.io/semantic-release/usage/configuration} for configuration details.
- * @see {@link https://github.com/semantic-release/semantic-release/blob/971a5e0d16f1a32e117e9ce382a1618c8256d0d9/lib/get-config.js#L56} for about default config.
+ * Fork-specific choices vs. upstream:
+ *   - Releases from `main`, not from a dedicated `release` branch.
+ *   - @semantic-release/npm runs with npmPublish: false — version bump only.
+ *     scripts/publish.js handles the actual publish via the rename-and-revert
+ *     dance so we ship as `@elliott-w/next-export-optimize-images` while the
+ *     in-tree package.json stays unscoped (so GitHub installs still resolve).
+ *   - No PR/issue comments and no released-labels — those would target
+ *     dc7290's tracker, not the fork's.
+ *
+ * @see https://semantic-release.gitbook.io/semantic-release/
  */
 
 const types = require('./commit-types.config')
 
-/**
- * GitHubのデフォルトブランチ
- */
-const defaultBranch = 'release'
-
-/**
- * changelogを書き出すファイル名
- */
+const defaultBranch = 'main'
 const changelogFile = 'CHANGELOG.md'
 
 module.exports = {
-  /**
-   * リリース対象となるGitブランチ
-   *
-   * @see https://semantic-release.gitbook.io/semantic-release/usage/workflow-configuration
-   */
-  branches: [defaultBranch, { name: 'beta', prerelease: true }],
-  /**
-   * Gitタグのフォーマット。Lodashのテンプレートが使えます。
-   * multi-semantic-releaseを使った場合は、この設定は無視されます。
-   */
+  branches: [defaultBranch],
   tagFormat: 'v${version}',
-  /**
-   * 実行するプラグイン
-   */
   plugins: [
-    /**
-     * conventional-changelogでコミットを解析します。
-     * @see https://github.com/semantic-release/commit-analyzer
-     */
     [
       '@semantic-release/commit-analyzer',
       {
@@ -49,10 +33,6 @@ module.exports = {
         ],
       },
     ],
-    /**
-     * conventional-changelogでchangelogコンテンツを生成します。
-     * @see https://github.com/semantic-release/release-notes-generator
-     */
     [
       '@semantic-release/release-notes-generator',
       {
@@ -66,58 +46,48 @@ module.exports = {
         },
       },
     ],
-    /**
-     * changelogコンテンツをもとにchangelogFileを生成します。
-     * @see https://github.com/semantic-release/changelog
-     */
     [
       '@semantic-release/changelog',
       {
         changelogFile,
         changelogTitle:
-          '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).\n\n## [Released](https://github.com/dc7290/next-export-optimize-images/releases)',
+          '# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).\n\n## [Released](https://github.com/elliott-w/next-export-optimize-images/releases)',
       },
     ],
-    /**
-     * package.jsonのバージョンを更新したり、npmパッケージを公開します。
-     * @see https://github.com/semantic-release/npm
-     */
     [
       '@semantic-release/npm',
       {
-        // npmに公開するかどうか
-        npmPublish: true,
+        // Version-bump only. scripts/publish.js handles the actual publish
+        // against the scoped name via the rename apply/revert dance.
+        npmPublish: false,
       },
     ],
-    /**
-     * リリース時に生成したアセットをGitリポジトリにコミットします。
-     * @see https://github.com/semantic-release/git
-     */
+    [
+      '@semantic-release/exec',
+      {
+        // package.json has the new version at this point. publish.js will
+        // rename → npm publish (scoped) → revert. Revert restores the
+        // unscoped name + bumped version so the git plugin commits the
+        // correct file back to main.
+        publishCmd: 'node scripts/publish.js',
+      },
+    ],
     [
       '@semantic-release/git',
       {
-        // コミット対象のファイル
-        assets: [
-          'package.json', // versionフィールドの変更をコミットするため
-          'yarn.lock', // versionフィールドの変更をコミットするため
-          changelogFile, // changelogFileの変更をコミットするため
-        ],
-        // コミットメッセージ
-        message: 'release: 🏹 ${nextRelease.gitTag} [skip ci]\n\n${nextRelease.notes}',
+        assets: ['package.json', 'package-lock.json', changelogFile],
+        // Notes intentionally omitted — they live in CHANGELOG.md + the
+        // GitHub Release. Embedding them here overflows ARG_MAX on the
+        // first release (no baseline tag → notes span all history).
+        message: 'release: 🏹 ${nextRelease.gitTag} [skip ci]',
       },
     ],
-    /**
-     * GitHub releaseを公開し、リリースされたプルリクエストやissueにコメントを残します。assetsをreleasesにアップロードすることもできます。
-     * @see https://github.com/semantic-release/github
-     */
     [
       '@semantic-release/github',
       {
-        // 関連するissueやPRにつけるラベル
-        releasedLabels: ['released', 'released-in-${nextRelease.gitTag}'],
-        // 関連するissueやPRに残すコメント
-        successComment:
-          "🎉 This ${issue.pull_request ? 'pull request' : 'issue'} is included in version ${nextRelease.gitTag}.",
+        successComment: false,
+        failComment: false,
+        releasedLabels: false,
       },
     ],
   ],
