@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Released](https://github.com/elliott-w/next-export-optimize-images/releases)
+
+## 4.7.0 (2026-05-13)
+
+* feat: 🚀 Add publishing workflow for @elliott-w ([b193bb0](https://github.com/elliott-w/next-export-optimize-images/commit/b193bb0))
+* feat: 🚀 Add unstable_nextImageAlias option ([947d47f](https://github.com/elliott-w/next-export-optimize-images/commit/947d47f))
+* chore: 🤖 Add github install instructions ([d1c524a](https://github.com/elliott-w/next-export-optimize-images/commit/d1c524a))
+* fix: 🐛 add next 16 + turbopack-default compatibility ([78eca0a](https://github.com/elliott-w/next-export-optimize-images/commit/78eca0a))
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
+
 ## [Released](https://github.com/dc7290/next-export-optimize-images/releases)
 
 ## [4.6.2](https://github.com/dc7290/next-export-optimize-images/compare/v4.6.1...v4.6.2) (2025-03-20)
