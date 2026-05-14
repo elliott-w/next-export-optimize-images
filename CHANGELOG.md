@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Released](https://github.com/elliott-w/next-export-optimize-images/releases)
 
+## 4.8.0 (2026-05-14)
+
+* feat: 🚀 Add enabled option ([8121d28](https://github.com/elliott-w/next-export-optimize-images/commit/8121d28))
+* chore: 🤖 add pre-flight auth check to npm publish ([428f3b3](https://github.com/elliott-w/next-export-optimize-images/commit/428f3b3))
+
 ## 4.7.0 (2026-05-13)
 
 * feat: 🚀 Add publishing workflow for @elliott-w ([b193bb0](https://github.com/elliott-w/next-export-optimize-images/commit/b193bb0))
