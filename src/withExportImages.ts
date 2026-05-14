@@ -18,12 +18,22 @@ export type WithExportImagesOptions = {
   __test?: boolean
   /** @default false */
   unstable_nextImageAlias?: UnstableNextImageAliasOption
+  /**
+   * When `false`, `withExportImages` returns `nextConfig` untouched. Useful for gating the
+   * wrapper to static-export builds only (e.g. `{ enabled: process.env.BUILD_TARGET === 'static' }`).
+   * @default true
+   */
+  enabled?: boolean
 }
 
 const withExportImages = async (
   nextConfig: NextConfig = {},
   options: WithExportImagesOptions = {}
 ): Promise<NextConfig> => {
+  if (options.enabled === false) {
+    return nextConfig
+  }
+
   if (nextConfig.images?.unoptimized) {
     throw Error(
       'The `images.unoptimized` is not supported. If you use this option, consider not using `next-export-optimize-images`.'

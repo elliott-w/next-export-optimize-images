@@ -67,6 +67,24 @@ export default withExportImages({
 
 :::
 
+### Gating to static-export builds
+
+`withExportImages` always applies its image-loader, Turbopack alias, and `images.loader = 'custom'` mutations, even when `output` is not `'export'`. If you build the same project in multiple modes (e.g. a static `output: 'export'` build for one target and a server build for another), pass `enabled` as a second-argument option to opt out:
+
+```js title="next.config.js"
+const withExportImages = require('next-export-optimize-images')
+
+module.exports = withExportImages(
+  {
+    output: process.env.BUILD_TARGET === 'static' ? 'export' : undefined,
+    // write your next.js configuration values.
+  },
+  { enabled: process.env.BUILD_TARGET === 'static' }
+)
+```
+
+When `enabled` is `false`, the wrapper returns `nextConfig` untouched. Defaults to `true`.
+
 2. Change the description of the `scripts` that do the `next build` in `package.json`
 
 ```diff title="package.json"
