@@ -1,10 +1,15 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { computeGeneratedWidths } from '../../src/intrinsicWidth'
 
 const FIXTURES = ['next-14-webpack', 'next-15-webpack', 'next-15-turbopack', 'next-16-webpack', 'next-16-turbopack']
 
 const REMOTE_URL = 'https://picsum.photos/seed/alias-test/200/300.jpg'
+// picsum returns the image at the URL-encoded dimensions, so the intrinsic
+// width is 200. The srcSet-pruning pass clamps generated widths to the smallest
+// ladder entry ≥ intrinsic (256), so anything above that is correctly absent.
+const REMOTE_INTRINSIC_WIDTH = 200
 
 const filter = process.env.FIXTURE
 const targets = filter ? FIXTURES.filter((f) => f === filter) : FIXTURES
@@ -39,7 +44,8 @@ const expectedWidths = (fixture: string): Set<number> => {
     imageConfigDefault: { imageSizes: number[]; deviceSizes: number[] }
   }
   const overriddenDeviceSizes = [320, 480, 768, 1024, 1440, 1920]
-  return new Set<number>([...imageConfigDefault.imageSizes, ...overriddenDeviceSizes])
+  const allSizes = [...imageConfigDefault.imageSizes, ...overriddenDeviceSizes]
+  return new Set<number>(computeGeneratedWidths(REMOTE_INTRINSIC_WIDTH, allSizes))
 }
 
 describe.each(targets)('unstable_nextImageAlias rewrites next/image for %s', (fixture) => {
