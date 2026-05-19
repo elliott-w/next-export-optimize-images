@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## [Released](https://github.com/elliott-w/next-export-optimize-images/releases)
 
+## <small>4.8.1 (2026-05-19)</small>
+
+* perf: ⚡️ Skip upscaled srcSet variants ([fb99970](https://github.com/elliott-w/next-export-optimize-images/commit/fb99970))
+
 ## 4.8.0 (2026-05-14)
 
 * feat: 🚀 Add enabled option ([8121d28](https://github.com/elliott-w/next-export-optimize-images/commit/8121d28))
