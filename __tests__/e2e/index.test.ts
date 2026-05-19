@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import fs from 'fs-extra'
 import { imageConfigDefault } from 'next/dist/shared/lib/image-config'
+import { computeMaxGeneratedWidth } from '../../src/intrinsicWidth'
 
 // Recursively walk the optimized-images output dir once and cache the results
 // so the per-pattern match below stays cheap.
@@ -35,64 +36,62 @@ const exist = (pattern: string) => {
   return allOptimized.some((f) => new RegExp(`^${reSrc}$`).test(f))
 }
 
-const files = [
-  // avif
+// Intrinsic widths per source — used to compute which ladder widths should
+// land on disk after the "skip larger than source" filter the loader and CLI
+// share. Bare-1920 imports/public fixtures are img/legacy-img/picture/etc.;
+// `get-props-mobile.png` is 903 wide; picsum URLs `/{id}/{W}/{H}` carry intrinsic
+// equal to W (200 across the test set); the animated webp is 400 wide.
+const STATIC_1920 = 1920
+const STATIC_MOBILE = 903
+const REMOTE_PICSUM = 200
+const ANIMATED = 400
 
-  // next/image
-  '_next/static/media/img.[hash]_[width].avif',
-  '_next/static/media/get-props.[hash]_[width].avif',
-  '_next/static/media/get-props-mobile.[hash]_[width].avif',
-  'images/img_[width].avif',
-  'id/237/200/300_[width].avif',
-  'id/238/200/300_[width].avif',
-  'id/500/200/400_[width].avif',
-  'images/animated_[width].avif',
-  '_next/static/media/client-only.[hash]_[width].avif',
-  // next/legacy/image
-  '_next/static/media/legacy-img.[hash]_[width].avif',
-  'images/legacy-img_[width].avif',
-  // picture
-  '_next/static/media/picture.[hash]_[width].avif',
-  'images/picture_[width].avif',
+const files: { pattern: string; intrinsic: number }[] = [
+  // avif
+  { pattern: '_next/static/media/img.[hash]_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props.[hash]_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props-mobile.[hash]_[width].avif', intrinsic: STATIC_MOBILE },
+  { pattern: 'images/img_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: 'id/237/200/300_[width].avif', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/238/200/300_[width].avif', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/500/200/400_[width].avif', intrinsic: REMOTE_PICSUM },
+  { pattern: 'images/animated_[width].avif', intrinsic: ANIMATED },
+  { pattern: '_next/static/media/client-only.[hash]_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/legacy-img.[hash]_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: 'images/legacy-img_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/picture.[hash]_[width].avif', intrinsic: STATIC_1920 },
+  { pattern: 'images/picture_[width].avif', intrinsic: STATIC_1920 },
 
   // webp
-
-  // next/image
-  '_next/static/media/img.[hash]_[width].webp',
-  '_next/static/media/get-props.[hash]_[width].webp',
-  '_next/static/media/get-props-mobile.[hash]_[width].webp',
-  'images/img_[width].webp',
-  'id/237/200/300_[width].webp',
-  'id/238/200/300_[width].webp',
-  'id/500/200/400_[width].webp',
-  'images/animated_[width].webp',
-  '_next/static/media/client-only.[hash]_[width].webp',
-  // next/legacy/image
-  '_next/static/media/legacy-img.[hash]_[width].webp',
-  'images/legacy-img_[width].webp',
-  // picture
-  '_next/static/media/picture.[hash]_[width].webp',
-  'images/picture_[width].webp',
+  { pattern: '_next/static/media/img.[hash]_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props.[hash]_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props-mobile.[hash]_[width].webp', intrinsic: STATIC_MOBILE },
+  { pattern: 'images/img_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: 'id/237/200/300_[width].webp', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/238/200/300_[width].webp', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/500/200/400_[width].webp', intrinsic: REMOTE_PICSUM },
+  { pattern: 'images/animated_[width].webp', intrinsic: ANIMATED },
+  { pattern: '_next/static/media/client-only.[hash]_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/legacy-img.[hash]_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: 'images/legacy-img_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/picture.[hash]_[width].webp', intrinsic: STATIC_1920 },
+  { pattern: 'images/picture_[width].webp', intrinsic: STATIC_1920 },
 
   // png or jpg
-
-  // next/image
-  '_next/static/media/img.[hash]_[width].png',
-  '_next/static/media/get-props.[hash]_[width].png',
-  '_next/static/media/get-props-mobile.[hash]_[width].png',
-  'images/img_[width].png',
-  'id/237/200/300_[width].jpg',
-  'id/238/200/300_[width].jpg',
-  'id/300/200/400_[width].jpg',
-  'id/400/200/400_[width].jpg',
-  'id/500/200/400_[width].jpg',
-  '_next/static/media/client-only.[hash]_[width].png',
-  // next/legacy/image
-  '_next/static/media/legacy-img.[hash]_[width].png',
-  'images/legacy-img_[width].png',
-  // picture
-  '_next/static/media/picture.[hash]_[width].png',
-  'images/picture_[width].png',
+  { pattern: '_next/static/media/img.[hash]_[width].png', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props.[hash]_[width].png', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/get-props-mobile.[hash]_[width].png', intrinsic: STATIC_MOBILE },
+  { pattern: 'images/img_[width].png', intrinsic: STATIC_1920 },
+  { pattern: 'id/237/200/300_[width].jpg', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/238/200/300_[width].jpg', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/300/200/400_[width].jpg', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/400/200/400_[width].jpg', intrinsic: REMOTE_PICSUM },
+  { pattern: 'id/500/200/400_[width].jpg', intrinsic: REMOTE_PICSUM },
+  { pattern: '_next/static/media/client-only.[hash]_[width].png', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/legacy-img.[hash]_[width].png', intrinsic: STATIC_1920 },
+  { pattern: 'images/legacy-img_[width].png', intrinsic: STATIC_1920 },
+  { pattern: '_next/static/media/picture.[hash]_[width].png', intrinsic: STATIC_1920 },
+  { pattern: 'images/picture_[width].png', intrinsic: STATIC_1920 },
 ]
 
 describe('`next build && next export && next-export-optimize-images` is executed correctly', () => {
@@ -100,14 +99,16 @@ describe('`next build && next export && next-export-optimize-images` is executed
     const customConfig = await require('./next.config.js')
     const configImages = { ...imageConfigDefault, ...customConfig.images }
     const allSizes = [...configImages.imageSizes, ...configImages.deviceSizes]
-    for (const size of allSizes) {
-      for (const file of files) {
+    for (const { pattern: file, intrinsic } of files) {
+      const max = computeMaxGeneratedWidth(intrinsic, allSizes)
+      for (const size of allSizes) {
         const pattern = file.replace('[width]', size.toString())
+        const shouldExist = size <= max
         const isExist = exist(pattern)
-        if (!isExist) {
-          console.log(pattern)
+        if (isExist !== shouldExist) {
+          console.log('expected', shouldExist, 'got', isExist, '→', pattern)
         }
-        expect(isExist).toBeTruthy()
+        expect(isExist).toBe(shouldExist)
       }
     }
   })

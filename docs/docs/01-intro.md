@@ -25,3 +25,4 @@ This makes it possible to build a high performance website with this solution, w
 - Cache prevents repeating the same optimization
 - Support TypeScript
 - Support AppRouter
+- `srcSet` stops at the source's intrinsic width — no upscaled variants are generated or requested

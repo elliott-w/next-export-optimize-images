@@ -1,14 +1,15 @@
 import path from 'node:path'
 import colors from 'ansi-colors'
-import appRootPath from 'app-root-path'
 import fs from 'fs-extra'
 import type { NextConfig } from 'next'
+import { buildIntrinsicMap } from './intrinsicWidthBuild'
 import {
   type UnstableNextImageAliasOption,
   applyWebpackAlias as applyUnstableNextImageWebpackAlias,
   buildTurbopackAlias as buildUnstableNextImageTurbopackAlias,
 } from './unstableNextImageAlias'
 import type { Config } from './utils/getConfig'
+import { packageFile } from './utils/packageFile'
 
 // Track whether the configuration message has been logged
 let configMessageLogged = false
@@ -49,7 +50,7 @@ const withExportImages = async (
     : existConfigOfCjs
       ? resolvedConfigPathOfCjs
       : null
-  const destConfigPath = appRootPath.resolve('node_modules/next-export-optimize-images/export-images.config.js')
+  const destConfigPath = packageFile('export-images.config.js')
 
   let config: Config = {}
   if (resolvedConfigPath !== null) {
@@ -77,6 +78,11 @@ const withExportImages = async (
       2
     )}`
   )
+
+  const publicDir = path.resolve(process.cwd(), 'public')
+  const ignorePaths = config.ignorePaths ? config.ignorePaths.map((p) => path.join(publicDir, p)) : []
+  const remoteImages = Array.isArray(config.remoteImages) ? config.remoteImages : undefined
+  await buildIntrinsicMap({ publicDir, ignorePaths, remoteImages })
 
   if (!configMessageLogged) {
     // eslint-disable-next-line no-console

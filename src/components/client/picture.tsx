@@ -1,5 +1,6 @@
 import Image, { type ImageProps, getImageProps } from 'next/image'
 import React, { forwardRef } from 'react'
+import { getIntrinsicFromImageSrc } from '../../intrinsicWidth'
 import getConfig from '../../utils/getConfig'
 import getStringSrc from '../utils/getStringSrc'
 import imageLoader from '../utils/imageLoader'
@@ -8,22 +9,23 @@ const config = getConfig()
 
 const Picture = forwardRef<HTMLImageElement, ImageProps>((props, forwardedRef) => {
   const srcStr = getStringSrc(props.src)
+  const intrinsic = getIntrinsicFromImageSrc(props.src)
 
   if (srcStr.endsWith('.svg')) {
-    return <Image {...props} ref={forwardedRef} loader={props.loader || imageLoader()} unoptimized />
+    return <Image {...props} ref={forwardedRef} loader={props.loader || imageLoader({ intrinsic })} unoptimized />
   }
 
   const blurDataURLObj = props.blurDataURL
     ? { blurDataURL: props.blurDataURL }
     : typeof props.src === 'string' && props.placeholder === 'blur' && props.loader === undefined
-      ? { blurDataURL: imageLoader()({ src: props.src, width: 8, quality: 10 }) }
+      ? { blurDataURL: imageLoader({ intrinsic })({ src: props.src, width: 8, quality: 10 }) }
       : {}
 
   const additionalFormats = [...new Set(config.generateFormats ?? ['webp'])]
   const sources = additionalFormats.map((format, i) => {
     const sourceProps = getImageProps({
       ...props,
-      loader: imageLoader(i),
+      loader: imageLoader({ formatIndex: i, intrinsic }),
     }).props
     return {
       srcSet: sourceProps.srcSet,
@@ -39,7 +41,7 @@ const Picture = forwardRef<HTMLImageElement, ImageProps>((props, forwardedRef) =
       {sources.map((source) => (
         <source key={source.type} {...source} />
       ))}
-      <Image {...props} ref={forwardedRef} loader={props.loader || imageLoader()} {...blurDataURLObj} />
+      <Image {...props} ref={forwardedRef} loader={props.loader || imageLoader({ intrinsic })} {...blurDataURLObj} />
     </picture>
   )
 })

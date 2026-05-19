@@ -7,6 +7,7 @@ import loadConfig from 'next/dist/server/config'
 import type { ImageConfigComplete } from 'next/dist/shared/lib/image-config'
 import recursiveReadDir from 'recursive-readdir'
 import sharp from 'sharp'
+import { filterOversizedManifest } from '../intrinsicWidthBuild'
 import buildOutputInfo from '../utils/buildOutputInfo'
 import formatValidate from '../utils/formatValidate'
 import getConfig, { type Config } from '../utils/getConfig'
@@ -320,6 +321,8 @@ export const optimizeImages = async ({
   // Collapse any duplicate entries introduced by the media-dir walk overlapping
   // with the webpack-loader-written manifest. No-op when there's no overlap.
   manifest = uniqueItems(manifest)
+
+  manifest = await filterOversizedManifest({ manifest, allSizes, srcDir, config })
 
   if (!terse) {
     console.log('\n- Image Optimization -')

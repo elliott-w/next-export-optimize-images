@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-'use strict'
 
 // Wrapper: build → rename → publish → revert. Always reverts, even if
 // publish fails — `postpublish` only runs on success, which is not enough.

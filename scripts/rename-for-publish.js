@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-'use strict'
 
 const fs = require('node:fs')
 const path = require('node:path')
@@ -98,10 +97,7 @@ function rewriteJsLike(filePath) {
   //      - default cache dir "node_modules/.cache/next-export-optimize-images"
   //    None of those are followed by "/" + path segments inside the same
   //    quoted string, so they don't match this pattern.
-  src = src.replace(
-    /(['"])next-export-optimize-images(\/[^'"]*)?\1/g,
-    (_m, q, rest = '') => `${q}${NEW}${rest}${q}`
-  )
+  src = src.replace(/(['"])next-export-optimize-images(\/[^'"]*)?\1/g, (_m, q, rest = '') => `${q}${NEW}${rest}${q}`)
 
   if (src === original) return false
   fs.writeFileSync(filePath, src)

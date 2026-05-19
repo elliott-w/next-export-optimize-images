@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import fs from 'fs-extra'
 import { imageConfigDefault } from 'next/dist/shared/lib/image-config'
+import { computeMaxGeneratedWidth } from '../../src/intrinsicWidth'
 
 const optimizedImagesDir = path.resolve(__dirname, '.next/static/chunks/images')
 const listAll = (root: string): string[] => {
@@ -30,20 +31,19 @@ const exist = (pattern: string) => {
   return allOptimized.some((f) => new RegExp(`^${reSrc}$`).test(f))
 }
 
-const files = [
-  // webp
-
-  // next/image
-  '_next/static/media/img.[hash]_[width].webp',
-  'id/237/200/300_[width].webp',
-  'id/238/200/300_[width].webp',
+// Intrinsic pixel width per source. Drives which ladder widths are expected
+// on disk under the new "skip oversized variants" behavior.
+const files: { pattern: string; intrinsic: number }[] = [
+  // webp — static import (img.png is 1920×1281)
+  { pattern: '_next/static/media/img.[hash]_[width].webp', intrinsic: 1920 },
+  // webp — remote (picsum 200×300 → intrinsic 200)
+  { pattern: 'id/237/200/300_[width].webp', intrinsic: 200 },
+  { pattern: 'id/238/200/300_[width].webp', intrinsic: 200 },
 
   // png or jpg
-
-  // next/image
-  '_next/static/media/img.[hash]_[width].png',
-  'id/237/200/300_[width].jpg',
-  'id/238/200/300_[width].jpg',
+  { pattern: '_next/static/media/img.[hash]_[width].png', intrinsic: 1920 },
+  { pattern: 'id/237/200/300_[width].jpg', intrinsic: 200 },
+  { pattern: 'id/238/200/300_[width].jpg', intrinsic: 200 },
 ]
 
 describe('`next build && next export && next-export-optimize-images` is executed correctly', () => {
@@ -51,14 +51,16 @@ describe('`next build && next export && next-export-optimize-images` is executed
     const customConfig = require('./next.config.js')
     const configImages = { ...imageConfigDefault, ...customConfig.images }
     const allSizes = [...configImages.imageSizes, ...configImages.deviceSizes]
-    for (const size of allSizes) {
-      for (const file of files) {
+    for (const { pattern: file, intrinsic } of files) {
+      const max = computeMaxGeneratedWidth(intrinsic, allSizes)
+      for (const size of allSizes) {
         const pattern = file.replace('[width]', size.toString())
+        const shouldExist = size <= max
         const isExist = exist(pattern)
-        if (!isExist) {
-          console.log(pattern)
+        if (isExist !== shouldExist) {
+          console.log('expected', shouldExist, 'got', isExist, '→', pattern)
         }
-        expect(isExist).toBeTruthy()
+        expect(isExist).toBe(shouldExist)
       }
     }
   })
